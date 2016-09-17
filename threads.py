@@ -12,6 +12,7 @@ from exceptions import StopThreadPoolExecutor
 data_queue = queue.Queue()
 data_producing = threading.Event()
 
+
 class WorkerThead(threading.Thread):
     def __init__(self, name):
         super(WorkerThead, self).__init__(name=name)
@@ -29,8 +30,7 @@ class WorkerThead(threading.Thread):
             try:
                 target(*args)
             except StopThreadPoolExecutor:
-                utils.print_info()
-                utils.print_status("Waiting for already scheduled jobs to finish...")
+                utils.print_info("Waiting for already scheduled jobs to finish...")
                 data_queue.queue.clear()
             finally:
                 data_queue.task_done()
@@ -61,15 +61,15 @@ class ThreadPoolExecutor(object):
             while not data_queue.empty():
                 time.sleep(1)
         except KeyboardInterrupt:
-            utils.print_info()
-            utils.print_status("Waiting for already scheduled jobs to finish...")
+            utils.print_info("\rclear remaining tasks...")
             data_queue.queue.clear()
         finally:
+            utils.print_info("Waiting for already scheduled jobs to finish...")
             for worker in self.start_worker:
                 worker.join()
             data_queue.unfinished_tasks = 0
 
-        utils.print_status('Elapsed time: ', time.time() - self.start_time, 'seconds')
+        utils.print_info('Elapsed time: ', time.time() - self.start_time, 'seconds')
 
     def submit(self, *args):
         try:
