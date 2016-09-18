@@ -56,8 +56,18 @@ class Interpreter(BaseInterpreter):
     def complete_use(self, text, line, begidx, endidx):
         module_line = line.partition(' ')[2]
         if module_line:
-            igon = len(module_line) - len(text)
-            return [s[igon:] for s in self.modules if s.startswith(module_line)]
+            available_modules = [s for s in self.modules if s.startswith(module_line)]
+
+            def split_modules(available_module):
+                head, _, tail = available_module[len(module_line):].partition('.')
+                if not tail:
+                    return
+                if head:
+                    return module_line + head
+                else:
+                    next_head, _, _ = tail.partition('.')
+                    return module_line + '.' + next_head
+            return list(map(split_modules, available_modules))
         else:
             return self.main_modules_dirs
 
