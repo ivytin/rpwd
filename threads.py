@@ -64,7 +64,7 @@ class ThreadPoolExecutor(object):
             utils.print_info("\rclear remaining tasks...")
             data_queue.queue.clear()
         finally:
-            utils.print_info("Waiting for already scheduled jobs to finish...")
+            utils.print_warning("Waiting for already scheduled jobs to finish...")
             for worker in self.start_worker:
                 worker.join()
             data_queue.unfinished_tasks = 0
