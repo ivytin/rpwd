@@ -8,11 +8,18 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-class RoutersploitException(Exception):
+class RouterPwnException(Exception):
     def __init__(self, msg=''):
-        super(RoutersploitException, self).__init__(msg)
+        super(RouterPwnException, self).__init__(msg)
         LOGGER.exception(self)
 
 
-class StopThreadPoolExecutor(RoutersploitException):
+class ModuleImportException(RouterPwnException):
+    pass
+
+
+class BadHostInfoException(RouterPwnException):
+    pass
+
+class StopThreadPoolExecutor(RouterPwnException):
     pass

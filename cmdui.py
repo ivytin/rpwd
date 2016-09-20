@@ -4,14 +4,15 @@
 import os
 
 import utils
+from exceptions import ModuleImportException
 from template.interpreter import BaseInterpreter
 from utils import Color
 from utils import Printer
 
 
-class Interpreter(BaseInterpreter):
+class CmdInterpreter(BaseInterpreter):
     def __init__(self):
-        super(Interpreter, self).__init__()
+        super(CmdInterpreter, self).__init__()
         Printer().start()
 
         self.version = '0.01'
@@ -32,7 +33,6 @@ class Interpreter(BaseInterpreter):
     exec <shell command> <args> Execute a command in a shell
     exit                        Exit RouterSploit"""
 
-        self.modules = utils.index_modules()
         self.main_modules_dirs = [module for module in os.listdir(utils.MODULES_DIR) if not module.startswith("__")]
 
     def postloop(self):
@@ -42,37 +42,25 @@ class Interpreter(BaseInterpreter):
     def cmdloop(self, intro=None):
         utils.print_info(self.banner)
         utils.printer_queue.join()
-        super(Interpreter, self).cmdloop()
+        super(CmdInterpreter, self).cmdloop()
 
     def do_use(self, module_path, *arg):
         module_path = utils.pythonize_path(module_path)
-        module_path = '.'.join(('modules', module_path))
+        module_path = '.'.join(('modules', module_path, '__interpreter__'))
         try:
-            current_module = utils.import_exploit(module_path)()
-        except Exception as err:
+            utils.import_module(module_path, 'Interpreter')()
+        except ModuleImportException as err:
             utils.print_failed(err)
             utils.printer_queue.join()
 
-    def complete_use(self, text, line, begidx, endidx):
-        module_line = line.partition(' ')[2]
-        if module_line:
-            available_modules = [s for s in self.modules if s.startswith(module_line)]
-
-            def split_modules(available_module):
-                head, _, tail = available_module[len(module_line):].partition('.')
-                if not tail:
-                    return
-                if head:
-                    return module_line + head
-                else:
-                    next_head, _, _ = tail.partition('.')
-                    return module_line + '.' + next_head
-            return list(map(split_modules, available_modules))
-        else:
-            return self.main_modules_dirs
+    def complete_use(self, text, *args, **kwargs):
+            return [module for module in self.main_modules_dirs if module.startswith(text)]
 
     def do_show(self, args):
-        print(self.modules)
+        for module in self.main_modules_dirs:
+            utils.print_info(module, end='\t')
+        utils.print_info('')
+        utils.printer_queue.join()
 
     def do_exit(self, args):
         return True

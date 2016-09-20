@@ -1,35 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
+
+import requests
 import utils
-from template.interpreter import BaseInterpreter
+from template.scanner import BaseScanner
 
 
-class Exploit(BaseInterpreter):
-    def __init__(self):
-        super(Exploit, self).__init__()
-        self.prompt_module = 'Scanner'
+class Scanner(BaseScanner):
+    prompt = 'Autoscanner'
 
-        self.sub_opt = {'set': ['target', 'port', 'output'],
-                        'show': ['target', 'port', 'output', 'all'], }
+    @staticmethod
+    def scan(host, port, timeout):
+        if not Scanner.ping(host, int(port), timeout):
+            utils.print_warning('Connect to host: {}:{} failed'.format(host, port))
+            return False
+        try:
+            r = requests.get('http://{}:{}'.format(host, port), timeout=timeout)
+        except requests.ConnectTimeout:
+            utils.print_warning('HTTP get call to host: http://{}:{} timeout'.format(host, port))
+            return False
+        else:
+            utils.print_info('host: http://{}:{} status code:{}'.format(host, port, r.status_code))
 
-        self.cmdloop()
-
-    def do_set(self, arg):
-        pass
-
-    def do_show(self, arg):
-        pass
-
-    def do_run(self, arg):
-        utils.print_success('!!!!!!')
-        utils.printer_queue.join()
-
-    def do_back(self, arg):
-        return True
-
-    def complete_set(self, text, *args):
-        return self.auto_complete(text, 'set')
-
-    def complete_show(self, text, *args):
-        return self.auto_complete(text, 'show')

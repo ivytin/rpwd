@@ -4,14 +4,17 @@
 import importlib
 import os
 import queue
+import socket
 import threading
 import sys
 import collections
 import modules as rtp_modules
+from exceptions import ModuleImportException
 
 PrintResource = collections.namedtuple("PrintResource", ['content', 'sep', 'end', 'file'])
 printer_queue = queue.Queue()
 MODULES_DIR = rtp_modules.__path__[0]
+
 
 def identify_os():
     if os.name == "nt":
@@ -61,28 +64,31 @@ def list_dirs(path):
 
 def index_modules(modules_directory=MODULES_DIR):
     """ Return list of all modules """
-
     modules = []
     for root, dirs, files in os.walk(modules_directory):
-        _, package, root = root.rpartition('routerpwn/modules/'.replace('/', os.sep))
+        _, package, root = root.rpartition(modules_directory.replace('/', os.sep))
         root = root.replace(os.sep, '.')
         files = filter(lambda x: not x.startswith("__") and x.endswith('.py'), files)
-        modules.extend(map(lambda x: '.'.join((root, os.path.splitext(x)[0])), files))
+        if root:
+            modules.extend(map(lambda x: '.'.join((root, os.path.splitext(x)[0])), files))
+        else:
+            modules.extend(map(lambda x: os.path.splitext(x)[0], files))
 
     return modules
 
 
-def import_exploit(path):
+def import_module(path, class_name):
     """ Import exploit module
 
+    :param class_name:
     :param path: absolute path to exploit e.g. routersploit.modules.exploits.asus.pass_bypass
     :return: exploit module or error
     """
     try:
         module = importlib.import_module(path)
-        return getattr(module, 'Exploit')
+        return getattr(module, class_name)
     except (ImportError, AttributeError, KeyError) as err:
-        raise Exception(
+        raise ModuleImportException(
             "Error during loading '{}'\n"
             "Error: {}\n"
             "It should be valid path to the module. "
@@ -157,3 +163,24 @@ class Printer(threading.Thread):
             # print('-----------')
             print(content, sep=sep, end=end, file=file)
             printer_queue.task_done()
+
+
+def valid_ip(ip):
+    try:
+        socket.inet_aton(ip)
+        return True
+    except socket.error:
+        return False
+
+
+def valid_port(port):
+    if 0 < int(port) < 65536:
+        return True
+    else:
+        return False
+
+def valid_timeout(timeout):
+    if 0 < int(timeout) < 10:
+        return True
+    else:
+        return False
