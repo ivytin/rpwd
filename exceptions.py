@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 class RouterPwnException(Exception):
     def __init__(self, msg=''):
         super(RouterPwnException, self).__init__(msg)
-        LOGGER.exception(self)
+        # LOGGER.exception(self)
 
 
 class ModuleImportException(RouterPwnException):
@@ -21,5 +21,10 @@ class ModuleImportException(RouterPwnException):
 class BadHostInfoException(RouterPwnException):
     pass
 
+
 class StopThreadPoolExecutor(RouterPwnException):
+    pass
+
+
+class RequetsHostException(RouterPwnException):
     pass

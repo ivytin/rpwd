@@ -3,7 +3,7 @@
 # @Author: 'arvin'
 import utils
 import threads
-from template.interpreter import BaseInterpreter, Target
+from template.interpreter import BaseInterpreter, Task
 from exceptions import BadHostInfoException, ModuleImportException
 
 
@@ -13,9 +13,9 @@ class Interpreter(BaseInterpreter):
         self.prompt_module = 'Scanner'
         self.module = None
         self.modules = utils.index_modules(modules_directory='/'.join((utils.MODULES_DIR, 'scanner/')))
-        self.sub_opt = {'set': ['host', 'port', 'output'],
+        self.sub_opt = {'set': ['add', 'timeout', 'threads', 'file', 'output'],
                         'show': ['host', 'port', 'output', 'all'], }
-        self.target = Target()
+        self.task = Task()
         self.cmdloop()
 
     def init_exploit(self):
@@ -36,27 +36,31 @@ class Interpreter(BaseInterpreter):
         else:
             self.change_prompt(self.module)
 
+    def do_unload(self, args):
+        self.module = None
+        self.prompt_module = 'Scanner'
+        self.generate_prompt()
+
     def complete_load(self, text, line, *args, **kwargs):
-        if text:
-            available_modules = [s for s in self.modules if s.startswith(text)]
+        available_modules = [s for s in self.modules if s.startswith(text)]
 
-            def split_modules(available_module):
-                head, _, tail = available_module[len(text):].partition('.')
-                if head:
-                    return text + head
-                if not head and not tail:
-                    return
-                else:
-                    next_head, _, _ = tail.partition('.')
-                    return text + '.' + next_head
+        def split_modules(available_module):
+            head, _, tail = available_module[len(text):].partition('.')
+            if head:
+                return text + head
+            if not head and not tail:
+                # indicates available_module[len(text)] is empty ''
+                return
+            else:
+                # indicates available_module[len(text)] begins with '.'
+                next_head, _, _ = tail.partition('.')
+                return text + '.' + next_head
 
-            return list(map(split_modules, available_modules))
-        else:
-            return self.modules
+        return list(map(split_modules, available_modules))
 
-    def do_set(self, args):
+    def do_task(self, args):
         try:
-            sub_opt, arg = args.split(' ')[0], args.split(' ')[1]
+            sub_opt, arg = args.split(' ')[0], args.split(' ')[1:]
             if sub_opt not in self.sub_opt['set']:
                 raise BadHostInfoException()
         except IndexError:
@@ -71,20 +75,23 @@ class Interpreter(BaseInterpreter):
             utils.printer_queue.join()
             return
         try:
-            self.target.__getattribute__(sub_opt)(arg)
-        except BadHostInfoException as err:
+            self.task.__getattribute__(sub_opt)(arg)
+        except (BadHostInfoException, TypeError) as err:
             utils.print_failed("Error during setting '{}'\n"
                                "{}.\n"
                                "Please check the arguments input.".format(sub_opt, err))
             utils.printer_queue.join()
 
-    def complete_set(self, text, *args):
+    def complete_task(self, text, *args):
         return self.auto_complete(text, 'set')
 
     def do_show(self, arg):
-        self.target.show()
+        self.task.show()
         utils.print_info('Output info:')
         utils.printer_queue.join()
+
+    def do_check(self, arg):
+        pass
 
     def do_run(self, arg):
         utils.print_info('checking if module loaded')
@@ -94,17 +101,18 @@ class Interpreter(BaseInterpreter):
             return
 
         utils.print_info('checking targets info')
-        if not self.check_target_arg():
+        if not self.check_task_arg():
             utils.print_failed('checking targets info failed\n'
                                'Please make sure you input info target info')
             return
         else:
             utils.print_success('passing checking...')
 
-        with threads.ThreadPoolExecutor(3) as executor:
-            executor.submit(self.target_func, self.target)
+        with threads.ThreadPoolExecutor(self.task.get_threads()) as executor:
+            for target in self.task.get_targets():
+                executor.submit(self.target_func, target)
 
-        utils.print_info()
+        # utils.print_info()
 
         utils.print_success('all tasks finished...')
         utils.printer_queue.join()
@@ -121,8 +129,8 @@ class Interpreter(BaseInterpreter):
         else:
             return self.sub_opt[opt]
 
-    def check_target_arg(self):
-        if self.target.get_host():
+    def check_task_arg(self):
+        if len(self.task.get_targets()) > 0:
             return True
         else:
             return False
@@ -134,4 +142,4 @@ class Interpreter(BaseInterpreter):
             return False
 
     def target_func(self, target):
-        self.module.scan(target.get_host(), target.get_port(), target.get_timeout())
+        self.module.scan(target.host, target.port, self.task.get_timeout())

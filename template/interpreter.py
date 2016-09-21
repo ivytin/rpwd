@@ -3,27 +3,32 @@
 # @Author: 'arvin'
 import cmd
 import utils
+import collections
 from utils import Color
 from exceptions import BadHostInfoException
 
 
-class Target(object):
+Target = collections.namedtuple('Target', 'host port')
+
+
+class Task(object):
     def __init__(self):
-        self.__host = None
-        self.__port = '80'
+        self.__targets = []
         self.__timeout = 3
+        self.__threads = 8
 
-    def host(self, host):
-        if utils.valid_ip(host):
-            self.__host = host
-        else:
-            raise BadHostInfoException('bad IP address: {}'.format(host))
+    def add(self, host_infos):
+        total = 0
+        for host_info in host_infos:
+            try:
+                host, port = host_info.split(':')[0], host_info.split(':')[1]
+                if utils.valid_host(host) and utils.valid_port(port):
+                    self.__targets.append(Target(host=host, port=int(port)))
+                    total += 1
+            except IndexError:
+                pass
 
-    def port(self, port):
-        if utils.valid_port(port):
-            self.__port = port
-        else:
-            raise BadHostInfoException('bad port number: {}'.format(port))
+        utils.print_info('Total {} hosts added'.format(total))
 
     def timeout(self, timeout):
         if utils.valid_timeout(timeout):
@@ -31,19 +36,67 @@ class Target(object):
         else:
             raise BadHostInfoException('bad timeout number: {}'.format(timeout))
 
-    def get_host(self):
-        return self.__host
+    def file(self, path):
+        # TODO read hosts info file
+        pass
 
-    def get_port(self):
-        return self.__port
+    def threads(self, threads):
+        if utils.valid_threads(threads):
+            self.__threads = int(threads)
+
+    def show(self):
+        utils.print_info("Target info: {}\n"
+                         "Threads: {}\n"
+                         "Timeout: {}"
+                         .format(self.__targets, self.__threads, self.__timeout))
+
+    def get_targets(self):
+        return self.__targets
+
+    def get_threads(self):
+        return self.__threads
 
     def get_timeout(self):
         return self.__timeout
 
-    def show(self, *arg):
-        utils.print_info("Target info: \n"
-                         "IP: {}\tPort: {}"
-                         .format(self.__host, self.__port))
+# class Target(object):
+#     def __init__(self):
+#         self.__host = None
+#         self.__port = '80'
+#         self.__timeout = 3
+#         self.__hosts = []
+#
+#     def host(self, host):
+#         if utils.valid_ip(host):
+#             self.__host = host
+#         else:
+#             raise BadHostInfoException('bad IP address: {}'.format(host))
+#
+#     def port(self, port):
+#         if utils.valid_port(port):
+#             self.__port = port
+#         else:
+#             raise BadHostInfoException('bad port number: {}'.format(port))
+#
+#     def timeout(self, timeout):
+#         if utils.valid_timeout(timeout):
+#             self.__timeout = int(timeout)
+#         else:
+#             raise BadHostInfoException('bad timeout number: {}'.format(timeout))
+#
+#     def get_host(self):
+#         return self.__host
+#
+#     def get_port(self):
+#         return self.__port
+#
+#     def get_timeout(self):
+#         return self.__timeout
+#
+#     def show(self, *arg):
+#         utils.print_info("Target info: \n"
+#                          "IP: {}\tPort: {}"
+#                          .format(self.__host, self.__port))
 
 
 class BaseInterpreter(cmd.Cmd):

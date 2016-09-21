@@ -13,9 +13,9 @@ data_queue = queue.Queue()
 data_producing = threading.Event()
 
 
-class WorkerThead(threading.Thread):
+class WorkerThread(threading.Thread):
     def __init__(self, name):
-        super(WorkerThead, self).__init__(name=name)
+        super(WorkerThread, self).__init__(name=name)
         self.name = name
 
     def run(self):
@@ -48,7 +48,7 @@ class ThreadPoolExecutor(object):
         workers = []
         data_producing.set()
         for worker_id in range(self.threads):
-            worker = WorkerThead("worker-{}".format(worker_id))
+            worker = WorkerThread("worker-{}".format(worker_id))
             workers.append(worker)
 
         self.workers = iter(workers)
@@ -61,15 +61,15 @@ class ThreadPoolExecutor(object):
             while not data_queue.empty():
                 time.sleep(1)
         except KeyboardInterrupt:
-            utils.print_info("\rclear remaining tasks...")
+            utils.print_info("\rClear remaining tasks...")
             data_queue.queue.clear()
         finally:
-            utils.print_warning("Waiting for already scheduled jobs to finish...")
+            utils.print_warning("All tasks dispatched\nWaiting for already scheduled jobs to finish...")
             for worker in self.start_worker:
                 worker.join()
             data_queue.unfinished_tasks = 0
 
-        utils.print_info('Elapsed time: ', time.time() - self.start_time, 'seconds')
+        utils.print_info('Elapsed time: {:.2} seconds'.format(time.time() - self.start_time))
 
     def submit(self, *args):
         try:

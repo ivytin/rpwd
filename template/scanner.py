@@ -21,9 +21,7 @@ class BaseScanner(object):
             cs.settimeout(timeout)
             status = cs.connect((host, port))
         except socket.error as msg:
-            utils.print_failed('Failed to create socket.\n '
-                               'Error code: {}, Error msg: {}'
-                               .format(msg[0], msg[1]))
+            # print('Failed to connect host: {}. Error msg: {}'.format(host, msg))
             return False
 
         if status != 0:

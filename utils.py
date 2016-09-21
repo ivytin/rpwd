@@ -165,7 +165,7 @@ class Printer(threading.Thread):
             printer_queue.task_done()
 
 
-def valid_ip(ip):
+def valid_host(ip):
     try:
         socket.inet_aton(ip)
         return True
@@ -174,13 +174,24 @@ def valid_ip(ip):
 
 
 def valid_port(port):
-    if 0 < int(port) < 65536:
-        return True
-    else:
-        return False
+    return valid_number(port, 0, 65536)
+
 
 def valid_timeout(timeout):
-    if 0 < int(timeout) < 10:
+    return valid_number(timeout, 0, 10)
+
+
+def valid_threads(threads):
+    return valid_number(threads, 1, 50)
+
+
+def valid_number(input, min, max):
+    try:
+        input = int(input)
+    except ValueError:
+        return False
+
+    if min < input < max:
         return True
     else:
         return False
