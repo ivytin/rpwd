@@ -13,6 +13,7 @@ class Interpreter(BaseInterpreter):
         self.prompt_module = 'Scanner'
         self.module = None
         self.modules = utils.index_modules(modules_directory='/'.join((utils.MODULES_DIR, 'scanner/')))
+        self.files = utils.list_files('./')
         self.sub_opt = {'set': ['add', 'timeout', 'threads', 'file', 'output'],
                         'show': ['host', 'port', 'output', 'all'], }
         self.task = Task()
@@ -32,7 +33,6 @@ class Interpreter(BaseInterpreter):
             self.module = utils.import_module(module_path, 'Scanner')
         except ModuleImportException as err:
             utils.print_failed(err)
-            utils.printer_queue.join()
         else:
             self.change_prompt(self.module)
 
@@ -67,12 +67,10 @@ class Interpreter(BaseInterpreter):
             utils.print_failed("Error during setting '{}'\n"
                                "Not enough arguments\n"
                                "Use <tab> key multiple times for completion.".format(args))
-            utils.printer_queue.join()
             return
         except BadHostInfoException as err:
             utils.print_failed("Error during setting '{}'\n"
                                "Use <tab> key multiple times for completion.".format(args))
-            utils.printer_queue.join()
             return
         try:
             self.task.__getattribute__(sub_opt)(arg)
@@ -80,15 +78,15 @@ class Interpreter(BaseInterpreter):
             utils.print_failed("Error during setting '{}'\n"
                                "{}.\n"
                                "Please check the arguments input.".format(sub_opt, err))
-            utils.printer_queue.join()
 
-    def complete_task(self, text, *args):
-        return self.auto_complete(text, 'set')
+    def complete_task(self, text, line, *args):
+        if len(line.split(' ')) > 2:
+            return [' '.join((attr, '')) for attr in self.files if attr.startswith(text)]
+        else:
+            return self.auto_complete(text, 'set')
 
     def do_show(self, arg):
         self.task.show()
-        utils.print_info('Output info:')
-        utils.printer_queue.join()
 
     def do_check(self, arg):
         pass
@@ -115,7 +113,6 @@ class Interpreter(BaseInterpreter):
         # utils.print_info()
 
         utils.print_success('all tasks finished...')
-        utils.printer_queue.join()
 
     def do_back(self, arg):
         return True

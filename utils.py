@@ -3,16 +3,11 @@
 # @Author: 'arvin'
 import importlib
 import os
-import queue
 import socket
-import threading
 import sys
-import collections
 import modules as rtp_modules
 from exceptions import ModuleImportException
 
-PrintResource = collections.namedtuple("PrintResource", ['content', 'sep', 'end', 'file'])
-printer_queue = queue.Queue()
 MODULES_DIR = rtp_modules.__path__[0]
 
 
@@ -60,6 +55,14 @@ def list_dirs(path):
     if ".cache" in dirs:
         dirs.remove(".cache")
     return dirs
+
+
+def list_files(path):
+    files = {name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))
+             and not (name.endswith('py') or name.endswith('pyc'))}
+    if ".gitignore" in files:
+        files.remove('.gitignore')
+    return list(files)
 
 
 def index_modules(modules_directory=MODULES_DIR):
@@ -123,10 +126,12 @@ def __print(*args, **kwargs):
     end = kwargs.get('end', '\n')
     if color:
         msg = color + sep.join("%s" % arg for arg in args) + Color.ENDC
-        printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
+        print(msg, sep=sep, end=end, file=file)
+        # printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
     else:
         msg = sep.join("%s" % arg for arg in args)
-        printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
+        print(msg, sep=sep, end=end, file=file)
+        # printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
 
 
 def print_success(*args, **kwargs):
@@ -151,18 +156,18 @@ def print_info(*args, **kwargs):
     __print(*args, **kwargs)
 
 
-class Printer(threading.Thread):
-    def __init__(self):
-        super(Printer, self).__init__()
-        self.daemon = True
-
-    def run(self):
-        while True:
-            content, sep, end, file = printer_queue.get()
-            # print(repr(content),repr(sep), repr(end), repr(file))
-            # print('-----------')
-            print(content, sep=sep, end=end, file=file)
-            printer_queue.task_done()
+# class Printer(threading.Thread):
+#     def __init__(self):
+#         super(Printer, self).__init__()
+#         self.daemon = True
+#
+#     def run(self):
+#         while True:
+#             content, sep, end, file = printer_queue.get()
+#             # print(repr(content),repr(sep), repr(end), repr(file))
+#             # print('-----------')
+#             print(content, sep=sep, end=end, file=file)
+#             printer_queue.task_done()
 
 
 def valid_host(ip):
@@ -195,3 +200,12 @@ def valid_number(input, min, max):
         return True
     else:
         return False
+
+
+def valid_file_exist(path):
+    return os.path.isfile(path)
+
+
+def valid_file_creatable(path):
+    dir_name = os.path.dirname(path) or os.getcwd()
+    return os.access(dir_name, os.W_OK)

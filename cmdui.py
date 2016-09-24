@@ -7,13 +7,11 @@ import utils
 from exceptions import ModuleImportException
 from template.interpreter import BaseInterpreter
 from utils import Color
-from utils import Printer
 
 
 class CmdInterpreter(BaseInterpreter):
     def __init__(self):
         super(CmdInterpreter, self).__init__()
-        Printer().start()
 
         self.version = '0.01'
         self.banner = """.______        ______    __    __  .___________. _______ .______      .______   ____    __    ____ .__   __.
@@ -37,11 +35,9 @@ class CmdInterpreter(BaseInterpreter):
 
     def postloop(self):
         utils.print_warning('Bye!')
-        utils.printer_queue.join()
 
     def cmdloop(self, intro=None):
         utils.print_info(self.banner)
-        utils.printer_queue.join()
         super(CmdInterpreter, self).cmdloop()
 
     def do_use(self, module_path, *arg):
@@ -51,7 +47,6 @@ class CmdInterpreter(BaseInterpreter):
             utils.import_module(module_path, 'Interpreter')()
         except ModuleImportException as err:
             utils.print_failed(err)
-            utils.printer_queue.join()
 
     def complete_use(self, text, *args, **kwargs):
             return [module for module in self.main_modules_dirs if module.startswith(text)]
@@ -60,7 +55,6 @@ class CmdInterpreter(BaseInterpreter):
         for module in self.main_modules_dirs:
             utils.print_info(module, end='\t')
         utils.print_info('')
-        utils.printer_queue.join()
 
     def do_exit(self, args):
         return True
@@ -70,7 +64,6 @@ class CmdInterpreter(BaseInterpreter):
 
     def help_exit(self):
         utils.print_help('Exit script')
-        utils.printer_queue.join()
 
 
 class ExploitInterpreter(BaseInterpreter):

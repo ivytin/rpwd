@@ -13,9 +13,10 @@ Target = collections.namedtuple('Target', 'host port')
 
 class Task(object):
     def __init__(self):
-        self.__targets = []
+        self.__targets = set()
         self.__timeout = 3
         self.__threads = 8
+        self.__output = ''
 
     def add(self, host_infos):
         total = 0
@@ -23,7 +24,7 @@ class Task(object):
             try:
                 host, port = host_info.split(':')[0], host_info.split(':')[1]
                 if utils.valid_host(host) and utils.valid_port(port):
-                    self.__targets.append(Target(host=host, port=int(port)))
+                    self.__targets.add(Target(host=host, port=int(port)))
                     total += 1
             except IndexError:
                 pass
@@ -36,9 +37,24 @@ class Task(object):
         else:
             raise BadHostInfoException('bad timeout number: {}'.format(timeout))
 
-    def file(self, path):
+    def file(self, paths):
         # TODO read hosts info file
-        pass
+        for path in paths:
+            if path != '':
+                if utils.valid_file_exist(path):
+                    self.read_host_file(path)
+                    break
+                else:
+                    raise BadHostInfoException('no such file: {}'.format(path))
+
+    def output(self, paths):
+        for path in paths:
+            if path != '':
+                if utils.valid_file_exist(path):
+                    self.read_host_file(path)
+                    break
+                else:
+                    raise BadHostInfoException('cannot creat output file: {}'.format(path))
 
     def threads(self, threads):
         if utils.valid_threads(threads):
@@ -47,8 +63,9 @@ class Task(object):
     def show(self):
         utils.print_info("Target info: {}\n"
                          "Threads: {}\n"
-                         "Timeout: {}"
-                         .format(self.__targets, self.__threads, self.__timeout))
+                         "Timeout: {}\n"
+                         "Output: {}"
+                         .format(self.__targets, self.__threads, self.__timeout, self.__output))
 
     def get_targets(self):
         return self.__targets
@@ -58,6 +75,22 @@ class Task(object):
 
     def get_timeout(self):
         return self.__timeout
+
+    def get_output(self):
+        return self.__output
+
+    def read_host_file(self, path):
+        fd = open(path, 'r')
+        total = 0
+        for line in map(lambda x: x.strip(), fd.readlines()):
+            host, ports = line.split(',')[0], line.split(',')[1:]
+            if utils.valid_host(host):
+                for port in ports:
+                    if utils.valid_port(port):
+                        self.__targets.add(Target(host=host, port=int(port)))
+                        total += 1
+
+        utils.print_info('Total {} hosts added'.format(total))
 
 # class Target(object):
 #     def __init__(self):
@@ -124,17 +157,17 @@ class BaseInterpreter(cmd.Cmd):
                 break
             except KeyboardInterrupt:
                 utils.print_warning('^C')
-                utils.printer_queue.join()
 
     def default(self, line):
         utils.print_failed('*** Unknown command: {command}'.format(command=line))
         # must wait util printer thread finishs print_failed() call,
         # or the output sequence will be disorganized
-        utils.printer_queue.join()
 
     def do_help(self, args):
         if not args:
             utils.print_info(self.help_info)
-            utils.printer_queue.join()
         else:
             super(BaseInterpreter, self).do_help(args)
+
+    def emptyline(self):
+        pass

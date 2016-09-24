@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
+
 import socket
-import utils
+import requests
+
+from exceptions import RequetsHostException
 
 
 class BaseScanner(object):
@@ -29,3 +32,22 @@ class BaseScanner(object):
             return True
         else:
             return False
+
+    @staticmethod
+    def http_get(s, host, port, timeout):
+        try:
+            r = s.get('http://{}:{}'.format(host, port), timeout=timeout, verify=False)
+        except requests.ConnectTimeout:
+            return None, RequetsHostException('HTTP connection timeout, host: http://{}:{}'
+                                              .format(host, port))
+        except requests.ConnectionError:
+            return None, RequetsHostException('HTTP connection error, host: http://{}:{}'
+                                              .format(host, port))
+        except requests.HTTPError:
+            return None, RequetsHostException('HTTP server response error, host: http://{}:{}'
+                                              .format(host, port))
+        except requests.exceptions.RequestException as msg:
+            return None, RequetsHostException('call requests.get error, msg: {}'
+                                              .format(msg))
+        else:
+            return r, None
