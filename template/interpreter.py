@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
 import cmd
+import queue
+
 import utils
 import collections
 from utils import Color
 from exceptions import BadHostInfoException
 
-
 Target = collections.namedtuple('Target', 'host port')
+result_queue = queue.Queue()
 
 
 class Task(object):
@@ -50,8 +52,8 @@ class Task(object):
     def output(self, paths):
         for path in paths:
             if path != '':
-                if utils.valid_file_exist(path):
-                    self.read_host_file(path)
+                if utils.valid_file_creatable(path):
+                    self.__output = path
                     break
                 else:
                     raise BadHostInfoException('cannot creat output file: {}'.format(path))
@@ -61,11 +63,20 @@ class Task(object):
             self.__threads = int(threads)
 
     def show(self):
-        utils.print_info("Target info: {}\n"
-                         "Threads: {}\n"
-                         "Timeout: {}\n"
-                         "Output: {}"
-                         .format(self.__targets, self.__threads, self.__timeout, self.__output))
+        utils.print_help('"Target info: {')
+        for target in self.__targets:
+            utils.print_info(' ' * 4 + target.host + ':' + str(target.port))
+        utils.print_help('}\nThreads: ', end='')
+        utils.print_info(str(self.__threads))
+        utils.print_help('Timeout: ', end='')
+        utils.print_info(str(self.__timeout))
+        utils.print_help('Output: ', end='')
+        utils.print_info(self.__output)
+        # utils.print_info("Target info: {}\n"
+        #                  "Threads: {}\n"
+        #                  "Timeout: {}\n"
+        #                  "Output: {}"
+        #                  .format(self.__targets, self.__threads, self.__timeout, self.__output))
 
     def get_targets(self):
         return self.__targets

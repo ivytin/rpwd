@@ -4,6 +4,7 @@
 import utils
 import threads
 from template.interpreter import BaseInterpreter, Task
+from template.interpreter import result_queue
 from exceptions import BadHostInfoException, ModuleImportException
 
 
@@ -92,6 +93,7 @@ class Interpreter(BaseInterpreter):
         pass
 
     def do_run(self, arg):
+        result_queue.empty()
         utils.print_info('checking if module loaded')
         if not self.check_module_loaded():
             utils.print_failed('checking module failed\n'
@@ -114,7 +116,19 @@ class Interpreter(BaseInterpreter):
 
         utils.print_success('all tasks finished...')
 
-    def do_back(self, arg):
+        if self.task.get_output() != '':
+            fd = open(self.task.get_output(), 'w')
+            while True:
+                try:
+                    result = result_queue.get(block=False)
+                    utils.print_info("{}: {} {}".format(result.host, result.port, result.module), file=fd)
+                except Exception as e:
+                    print(e)
+                    break
+
+            fd.close()
+
+    def do_back(self, *arg):
         return True
 
     def complete_show(self, text, *args):

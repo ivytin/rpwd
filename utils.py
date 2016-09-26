@@ -149,7 +149,7 @@ def print_warning(*args, **kwargs):
 
 
 def print_help(*args, **kwargs):
-    __print(*args, color=Color.PURPLE, **kwargs)
+    __print(*args, color=Color.BLUE, **kwargs)
 
 
 def print_info(*args, **kwargs):

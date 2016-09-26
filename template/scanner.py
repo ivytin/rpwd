@@ -4,8 +4,11 @@
 
 import socket
 import requests
-
+from collections import namedtuple
 from exceptions import RequetsHostException
+
+router_fingerprint = namedtuple('r_fingerprint', ['module', 'segment', 'fp', 'exploit'])
+router = namedtuple('router', ['host', 'port', 'brand', 'module'])
 
 
 class BaseScanner(object):
@@ -37,17 +40,17 @@ class BaseScanner(object):
     def http_get(s, host, port, timeout):
         try:
             r = s.get('http://{}:{}'.format(host, port), timeout=timeout, verify=False)
-        except requests.ConnectTimeout:
-            return None, RequetsHostException('HTTP connection timeout, host: http://{}:{}'
-                                              .format(host, port))
-        except requests.ConnectionError:
-            return None, RequetsHostException('HTTP connection error, host: http://{}:{}'
-                                              .format(host, port))
-        except requests.HTTPError:
-            return None, RequetsHostException('HTTP server response error, host: http://{}:{}'
-                                              .format(host, port))
-        except requests.exceptions.RequestException as msg:
-            return None, RequetsHostException('call requests.get error, msg: {}'
-                                              .format(msg))
+        # except requests.exceptions.Timeout:
+        #     return None, RequetsHostException('HTTP connection timeout, host: http://{}:{}'
+        #                                       .format(host, port))
+        except requests.RequestException as err:
+            return None, RequetsHostException('{}:{} request error, msg: {}'
+                                              .format(host, port, type(err).__name__))
+        # except requests.HTTPError:
+        #     return None, RequetsHostException('HTTP server response error, host: http://{}:{}'
+        #                                       .format(host, port))
+        # except requests.exceptions.RequestException as msg:
+        #     return None, RequetsHostException('call requests.get error, msg: {}'
+        #                                       .format(msg))
         else:
             return r, None
