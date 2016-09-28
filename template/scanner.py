@@ -7,8 +7,25 @@ import requests
 from collections import namedtuple
 from exceptions import RequetsHostException
 
-router_fingerprint = namedtuple('r_fingerprint', ['module', 'segment', 'fp', 'exploit'])
-router = namedtuple('router', ['host', 'port', 'brand', 'module'])
+# module: TL-WR720N
+# match_type: 0/1/2, 0 -> equal; 1 -> has; 2 -> regEx(retain)
+# exploit: available exploit list
+
+www_fingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
+# www_auth_fingerprint = namedtuple('r_fp', ['module', 'match_type', 'fp', 'exploit'])
+# module: DIR-629
+# segment: headers.server/body
+# fp_type: 0/1/2, 0 -> equal; 1 -> has; 2 -> regEx(retain)
+# fp: <a href="http://support.dlink.com" target="_blank">DIR-629</a>
+# extra: [('<span class="version">.+?: (.+?)</span>', 1), ('style="text-transform:uppercase;">(.+?)</span>', 1)]
+# exploit: available exploit list
+http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'match_type', 'fp', 'extra', 'exploit'])
+# http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'match-type', 'fp', [('', '', 1), ('', '', 1)], []])
+jump_feature = {
+    '': [],
+    # '': []
+}
+router = namedtuple('router', ['host', 'port', 'brand', 'module', 'extra', 'exploit'])
 
 
 class BaseScanner(object):
@@ -37,9 +54,9 @@ class BaseScanner(object):
             return False
 
     @staticmethod
-    def http_get(s, host, port, timeout):
+    def http_get(s, host, port, timeout, appendix=''):
         try:
-            r = s.get('http://{}:{}'.format(host, port), timeout=timeout, verify=False)
+            r = s.get('http://{}:{}{}'.format(host, port, appendix), timeout=timeout, verify=False)
         # except requests.exceptions.Timeout:
         #     return None, RequetsHostException('HTTP connection timeout, host: http://{}:{}'
         #                                       .format(host, port))

@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: 'arvin'
+
+from template.scanner import www_fingerprint, http_fingerprint
+
+# www_fingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
+BASIC_FP = [
+    www_fingerprint('JWNR200', 0, 'Basic realm="."JWNR2000', []),
+    www_fingerprint('DVG1000', 1, 'Basic realm="DVG1000', []),
+    www_fingerprint('KWGR614', 0, 'Basic realm="KWGR614"', []),
+    www_fingerprint('MR814', 0, 'Basic realm="MR814"', []),
+    www_fingerprint('N300', 0, 'Basic realm="N300"', []),
+    www_fingerprint('DG834', 0, 'Basic realm="NETGEAR DG834  "', []),
+    www_fingerprint('DG834', 0, 'Basic realm="NETGEAR DG834 "', []),
+    www_fingerprint('DG834 B',0,  'Basic realm="NETGEAR DG834 B"', []),
+    www_fingerprint('DG834G', 0, 'Basic realm="NETGEAR DG834G "', []),
+    www_fingerprint('DG834GB', 0, 'Basic realm="NETGEAR DG834GB"', []),
+    www_fingerprint('DG834GL', 0, 'Basic realm="NETGEAR DG834GL "', []),
+    www_fingerprint('DG834Nv2', 0, 'Basic realm="NETGEAR DG834Nv2"', []),
+    www_fingerprint('DG834PNB', 'Basic realm="NETGEAR DG834PNB"', []),
+    www_fingerprint('DGN1000', 0, 'Basic realm="NETGEAR DGN1000 "', []),
+    www_fingerprint('DGN1000B', 0, 'Basic realm="NETGEAR DGN1000B"', []),
+    www_fingerprint('DGN2000', 0, 'Basic realm="NETGEAR DGN2000 "', []),
+    www_fingerprint('DGN2200', 0, 'Basic realm="NETGEAR DGN2200"', []),
+    www_fingerprint('DGN2200Bv3', 0, 'Basic realm="NETGEAR DGN2200Bv3"', []),
+    www_fingerprint('DGN2200M', 0, 'Basic realm="NETGEAR DGN2200M"', []),
+    www_fingerprint('DGN2200v3', 0, 'Basic realm="NETGEAR DGN2200v3"', []),
+    www_fingerprint('DGN3500 ', 0, 'Basic realm="NETGEAR DGN3500 "', []),
+    www_fingerprint('DGN3500B', 0, 'Basic realm="NETGEAR DGN3500B"', []),
+    www_fingerprint('DGN3500_SSH', 0, 'Basic realm="NETGEAR DGN3500_SSH "', []),
+    www_fingerprint('DM111PSPv2', 0, 'Basic realm="NETGEAR DM111PSPv2"', []),
+    www_fingerprint('JNR1010v2', 0, 'Basic realm="NETGEAR JNR1010v2"', []),
+    www_fingerprint('JWNR2000v2', 0, 'Basic realm="NETGEAR JWNR2000v2 "', []),
+    www_fingerprint('JWNR2010v5', 0, 'Basic realm="NETGEAR JWNR2010v5"', []),
+    www_fingerprint('R6300', 0, 'Basic realm="NETGEAR R6300"', []),
+    www_fingerprint('WGR614v9', 0, 'Basic realm="NETGEAR WGR614v9"', []),
+    www_fingerprint('WNDR3600', 0, 'Basic realm="NETGEAR WNDR3600"', []),
+    www_fingerprint('WNDR3700v2', 0, 'Basic realm="NETGEAR WNDR3700v2"', []),
+    www_fingerprint('WNDR3800', 0, 'Basic realm="NETGEAR WNDR3800"', []),
+    www_fingerprint('WNDR4000', 0, 'Basic realm="NETGEAR WNDR4000"', []),
+    www_fingerprint('WNDR4500', 0, 'Basic realm="NETGEAR WNDR4500"', []),
+    www_fingerprint('WNDR4500v2', 0, 'Basic realm="NETGEAR WNDR4500v2"', []),
+    www_fingerprint('WNR1000v3', 0, 'Basic realm="NETGEAR WNR1000v3"', []),
+    www_fingerprint('WNR2000v5', 0, 'Basic realm="NETGEAR WNR2000v5"', []),
+    www_fingerprint('WNR2020', 0, 'Basic realm="NETGEAR WNR2020"', []),
+    www_fingerprint('WNR3500L', 0, 'Basic realm="NETGEAR WNR3500L"', []),
+    www_fingerprint('WNR3500Lv2', 0, 'Basic realm="NETGEAR WNR3500Lv2"', []),
+    www_fingerprint('WNR612ERT', 0, 'Basic realm="NETGEAR WNR612ERT"', []),
+    www_fingerprint('WNR612v2', 0, 'Basic realm="NETGEAR WNR612v2"', []),
+    www_fingerprint('WNR614', 0, 'Basic realm="NETGEAR WNR614"', []),
+    www_fingerprint('WNR618', 0, 'Basic realm="NETGEAR WNR618"', []),
+    www_fingerprint('WPN824N', 0, 'Basic realm="NETGEAR WPN824N"', []),
+    www_fingerprint('XWN5001', 0, 'Basic realm="NETGEAR XWN5001"', []),
+    www_fingerprint('WNR2000v3', 0, 'Basic realm="NETGEAR wnr2000v3"', []),
+    www_fingerprint('WNR2000v4', 0, 'Basic realm="NETGEAR wnr2000v4"', []),
+    www_fingerprint('WNR2200', 0, 'Basic realm="NETGEAR wnr2200"', []),
+    www_fingerprint('WNR3500Lv1', 0, 'Basic realm="Netgear WNR3500Lv1"', []),
+    www_fingerprint('RP614', 0, 'Basic realm="RP614"', []),
+    www_fingerprint('RP614v4', 0, 'Basic realm="RP614v4"', []),
+    www_fingerprint('WG602V3', 0, 'Basic realm="WG602V3"', []),
+    www_fingerprint('WG602V4', 0, 'Basic realm="WG602V4"', []),
+    www_fingerprint('WGR614v6', 0, 'Basic realm="WGR614v6"', []),
+    www_fingerprint('WGR614v7', 0, 'Basic realm="WGR614v7"', []),
+    www_fingerprint('WGT624', 0, 'Basic realm="WGT624"', []),
+    www_fingerprint('WGT624v3', 0, 'Basic realm="WGT624v3"', []),
+    www_fingerprint('WNDR4500', 0, 'Basic realm="WNDR4500"', []),
+    www_fingerprint('WNR3500L', 0, 'Basic realm="WNR3500L"', []),
+    www_fingerprint('WPN824v2', 0, 'Basic realm="WPN824v2"', []),
+    www_fingerprint('JWNR2000', 1, 'Digest realm="NETGEAR JWNR2000', []),
+    www_fingerprint('JNR3000', 0, 'Basic realm="NETGEAR JNR3000"', []),
+    www_fingerprint('JNR3210', 0, 'Basic realm="NETGEAR JNR3210"', []),
+    www_fingerprint('WN1000RP', 0, 'Basic realm="NETGEAR WN1000RP"', [])
+]
+
+# http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'math_type', 'fp', 'extra', 'exploit'])
+HTTP_FP = [
+    ('WNR612ERT', 'TEXT',  1,  '<TITLE>NETGEAR Router WNR612ERT</TITLE>', [], []),
+    ('WNR612v2', 'TEXT',  1,  '<TITLE>NETGEAR Router WNR612v2</TITLE>', [], []),
+    ('WPN824N ', 'TEXT',  1,  '<TITLE>NETGEAR Router WPN824N </TITLE>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router DGN2200v2</title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR1000v2 </title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR2000v3 </title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR2000v4</title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR2000v5</title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR2200 </title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR2500</title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR3500L</title>', [], []),
+    ('', 'TEXT',  1,  '<title>NETGEAR Router WNR3500Lv2</title>', [], []),
+]
+
+JUMP_LIST = []
+
