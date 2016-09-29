@@ -1,21 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
+import re
 
+import collections
 import requests
 import utils
 from collections import namedtuple
-from template.scanner import BaseScanner, router
+from template.scanner import BaseScanner, RouterInfo, ExtraInfo
 from template.interpreter import result_queue
-from modules.scanner import tplink
+from modules.scanner import tplink, netgear
 
-fingerprint_conf = namedtuple('fingerprint_conf', ['brand', 'www_auth_fp', 'http_fp'])
+FingerprintConf = namedtuple('fingerprint_conf', ['brand', 'www_auth_fp', 'http_fp'])
 
 FINGERPRINT_DB = [
-    fingerprint_conf('TP-LINK', tplink.BASIC_FP, tplink.HTTP_FP),
+    FingerprintConf('TP-LINK', tplink.BASIC_FP, tplink.HTTP_FP),
+    FingerprintConf('NETGEAR', netgear.BASIC_FP, netgear.HTTP_FP)
 ]
 
-JUMP_FEATURES = []
+JUMP_FEATURES = [tplink.JUMP_LIST, netgear.JUMP_LIST]
 
 
 class Scanner(BaseScanner):
@@ -35,9 +38,9 @@ class Scanner(BaseScanner):
 
         if 'WWW-Authenticate' in r1.headers:
             # match www_auth_fingerprint list
-            brand, module_name, _ = Scanner.www_auth_handler(r1)
+            brand, module_name, exploit = Scanner.www_auth_handler(r1)
             if brand:
-                result = router(host=host, port=port, brand=brand, module=module_name)
+                result = RouterInfo(host=host, port=port, brand=brand, module=module_name, extra=None, exploit=exploit)
                 utils.print_info("{}: {} {}".format(host, brand, module_name))
             else:
                 # result = router(host=host, port=port, brand='Unknown', module='Unknown')
@@ -45,21 +48,23 @@ class Scanner(BaseScanner):
                 return
 
         else:
-            for jp_feature in JUMP_FEATURES:
-                if jp_feature in r1.text:
-                    # match jump_fingerprint list
-                    appendix = jp_feature
-                    r1, err = Scanner.http_get(s, host, port, timeout * 2, appendix='')
-                    if err:
-                        utils.print_warning(err)
-                        return
+            for jp_list in JUMP_FEATURES:
+                for jp_feature in jp_list:
+                    if jp_feature in r1.text:
+                        # match jump_fingerprint list
+                        appendix = jp_feature
+                        r1, err = Scanner.http_get(s, host, port, timeout * 2, appendix=appendix)
+                        if err:
+                            utils.print_warning(err)
+                            return
             # match normal_fingerprint list
-                brand, module_name, extra, _ = Scanner.http_auth_handler(s, r1)
-                if brand:
-                    utils.print_info("{}: {}, {}".format(host, module_name, extra))
-                else:
-                    utils.print_info("{}: {}".format(host, 'Unknown'))
-                    return
+            brand, module_name, extra, exploit = Scanner.http_auth_handler(r1)
+            if brand:
+                result = RouterInfo(host=host, port=port, brand=brand, module=module_name, extra=extra, exploit=exploit)
+                utils.print_info("{}: {} {}, {}".format(host, brand, module_name, extra))
+            else:
+                utils.print_info("{}: {}".format(host, 'Unknown'))
+                return
 
         result_queue.put(result)
 
@@ -84,21 +89,73 @@ class Scanner(BaseScanner):
         return None, None, None
 
     @staticmethod
-    def http_auth_handler(s, r):
+    def http_auth_handler(r):
         for fp_conf in FINGERPRINT_DB:
             for r_fp in fp_conf.http_fp:
-                # http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'math_type', 'fp', 'extra', 'exploit'])
+                # http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'match_type', 'fp', 'extra', 'exploit'])
                 if r_fp.segment == 'TEXT':
-                    pass
+                    if Scanner.grab_info(r.text, r_fp.match_type, r_fp.fp):
+                        extra_info = Scanner.grab_extra(r, r_fp.extra)
+                        return fp_conf.brand, r_fp.module, extra_info, []
                 else:
-                    if r_fp.match_type == 0:
-                        pass
-                    elif r_fp.match_type == 1:
-                         pass
-                    elif r_fp.match_type == 2:
-                        pass
+                    if Scanner.grab_info(r.headers[r_fp.segment], r_fp.match_type, r_fp.fp):
+                        extra_info = Scanner.grab_extra(r, r_fp.extra)
+                        return fp_conf.brand, r_fp.module, extra_info, []
 
             if fp_conf.brand.lower() in r.headers['Server'].lower():
                 return fp_conf.brand, 'perhaps', None, []
 
+            if fp_conf.brand.lower() in r.text.lower():
+                return fp_conf.brand, 'perhaps', None, []
+
         return None, None, None, None
+
+    @staticmethod
+    def grab_info(raw, match_type, feature, *index):
+        if match_type == 0:
+            if feature == raw:
+                return True
+        elif match_type == 1:
+            if feature in raw:
+                return True
+        elif match_type == 2:
+            regex = re.compile(feature)
+            if_match = regex.search(raw)
+            if if_match:
+                if index:
+                    return if_match.group(index)
+                else:
+                    return True
+
+        return False
+
+    @staticmethod
+    def grab_extra(r, extra_features):
+        # extra(segment, feature, index)
+        extra = []
+        if extra_features[0]:
+            # firmware
+            extra_info = ExtraInfo._make(extra_features[0])
+            if extra_info.segment == 'TEXT':
+                info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
+            else:
+                info = Scanner.grab_info(r.headers[extra_info.segment], extra_info.feature, extra_info.index)
+
+            if info:
+                extra.append('firmware: ' + info)
+
+        if extra_features[1]:
+            # hardware
+            extra_info = ExtraInfo._make(extra_features[1])
+            if extra_info.segment == 'TEXT':
+                info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
+            else:
+                info = Scanner.grab_info(r.headers[extra_info.segment], extra_info.feature, extra_info.index)
+
+            if info:
+                extra.append('hardware: ' + info)
+
+        if len(extra) > 0:
+            return ' '.join(extra)
+        else:
+            return None
