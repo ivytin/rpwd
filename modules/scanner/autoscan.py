@@ -2,20 +2,19 @@
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
 import re
-
-import collections
 import requests
 import utils
 from collections import namedtuple
 from template.scanner import BaseScanner, RouterInfo, ExtraInfo
 from template.interpreter import result_queue
-from modules.scanner import tplink, netgear
+from modules.scanner import tplink, netgear, dlink
 
 FingerprintConf = namedtuple('fingerprint_conf', ['brand', 'www_auth_fp', 'http_fp'])
 
 FINGERPRINT_DB = [
     FingerprintConf('TP-LINK', tplink.BASIC_FP, tplink.HTTP_FP),
-    FingerprintConf('NETGEAR', netgear.BASIC_FP, netgear.HTTP_FP)
+    FingerprintConf('NETGEAR', netgear.BASIC_FP, netgear.HTTP_FP),
+    FingerprintConf('D-LINK', dlink.BASIC_FP, dlink.HTTP_FP),
 ]
 
 JUMP_FEATURES = [tplink.JUMP_LIST, netgear.JUMP_LIST]
@@ -111,7 +110,7 @@ class Scanner(BaseScanner):
         return None, None, None, None
 
     @staticmethod
-    def grab_info(raw, match_type, feature, *index):
+    def grab_info(raw, match_type, feature, index=None):
         if match_type == 0:
             if feature == raw:
                 return True
@@ -122,7 +121,7 @@ class Scanner(BaseScanner):
             regex = re.compile(feature)
             if_match = regex.search(raw)
             if if_match:
-                if index:
+                if index is not None:
                     return if_match.group(index)
                 else:
                     return True
@@ -139,10 +138,10 @@ class Scanner(BaseScanner):
             if extra_info.segment == 'TEXT':
                 info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
             else:
-                info = Scanner.grab_info(r.headers[extra_info.segment], extra_info.feature, extra_info.index)
+                info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
 
             if info:
-                extra.append('firmware: ' + info)
+                extra.append('firmware: {}'.format(info))
 
         if extra_features[1]:
             # hardware
@@ -150,10 +149,10 @@ class Scanner(BaseScanner):
             if extra_info.segment == 'TEXT':
                 info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
             else:
-                info = Scanner.grab_info(r.headers[extra_info.segment], extra_info.feature, extra_info.index)
+                info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
 
             if info:
-                extra.append('hardware: ' + info)
+                extra.append('hardware: {}'.format(info))
 
         if len(extra) > 0:
             return ' '.join(extra)
