@@ -183,20 +183,20 @@ def valid_port(port):
 
 
 def valid_timeout(timeout):
-    return valid_number(timeout, 0, 10)
+    return valid_number(timeout, 1, 15)
 
 
 def valid_threads(threads):
     return valid_number(threads, 1, 50)
 
 
-def valid_number(input, min, max):
+def valid_number(num_in, num_min, num_max):
     try:
-        input = int(input)
+        num_in = int(num_in)
     except ValueError:
         return False
 
-    if min < input < max:
+    if num_min < num_in < num_max:
         return True
     else:
         return False

@@ -58,7 +58,43 @@ BASIC_FP = [
 # http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'math_type', 'fp', 'extra', 'exploit'])
 HTTP_FP = [
     HFingerprint('DAP-1522', 'Server', 1, 'DAP-1522', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-615', 'Server', 1, 'DIR-615', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-865L', 'Server', 1, 'DIR-865L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DSL-2890AL', 'Server', 1, 'DSL-2890AL', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DWR-112', 'Server', 1, 'DWR-112', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DAP-1150', 'Server', 1, 'DAP-1150', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DAP-1152', 'Server', 1, 'DAP-1152', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-300', 'Server', 1, 'DIR-300', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-412', 'Server', 1, 'DIR-412', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-456U', 'Server', 1, 'DIR-456U', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-600', 'Server', 1, 'DIR-600', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-610', 'Server', 1, 'DIR-610 ', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-610N+', 'Server', 1, 'DIR-610N+', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-615', 'TEXT', 1, '<title>DIR-615</title>',
+                 [('TEXT', "<div class='version'>(.+)</div>", 1), None], []),
+    HFingerprint('DIR-629', 'Server', 1, 'DIR-629', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-645', 'Server', 1, 'DIR-645', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-815', 'Server', 1, 'DIR-815', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-845L', 'Server', 1, 'DIR-845L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-850L', 'Server', 1, 'DIR-850L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-860L', 'Server', 1, 'DIR-860L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-865L', 'Server', 1, 'DIR-865L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DIR-868L', 'Server', 1, 'DIR-868L', [('Server', 'Ver .+', 0), None], []),
+    HFingerprint('DVG-5402SP', 'TEXT', 1, 'Welcome to DVG-5402SP Web Management', [None, None], []),
+    HFingerprint('DIR-620', 'TEXT', 1, '<title>DIR-620</title>',
+                 [('TEXT', "<span id='v_firmware'></span>[^\d]+(.+)<br />", 1), None], []),
+    HFingerprint('DIR-615', 'TEXT', 1, "<span id='v_proxy'>DIR-615</span>",
+                 [('TEXT', "<span id='v_firmware'>[^\d]+(.+)<br /></span><br />", 1), None], []),
+    HFingerprint('DIR-100', 'TEXT', 1, '<title>D-Link DIR-100 Setup</title>', [None, None], []),
+    HFingerprint('DSL-2640NRU', 'TEXT', 1, '<title>D-link DSL-2640NRU - SMILE ADSL</title>', [None, None], []),
+    HFingerprint('DAP-1155', 'TEXT', 1, '<title>DAP-1155</title>', [None, None], []),
+    HFingerprint('DAP-1360', 'TEXT', 1, '<title>DAP-1360</title>', [None, None], []),
+    HFingerprint('DCS-2000', 'TEXT', 1, '<title>DCS-2000</title>', [None, None], []),
+    HFingerprint('DCS-2000', 'TEXT', 1, '<title>DCS-2000</title>', [None, None], []),
+    # special
+    HFingerprint('DIR-300', 'TEXT', 1, 'target=_blank><font class=l_tb>DIR-300</font>', [None, None], []),
 ]
 
-JUMP_LIST = []
-
+JUMP_LIST = {
+    "<meta http-equiv=Refresh content='0; url=index.php'>": 'index.php',
+}

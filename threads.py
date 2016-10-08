@@ -69,7 +69,7 @@ class ThreadPoolExecutor(object):
                 worker.join()
             data_queue.unfinished_tasks = 0
 
-        utils.print_info('Elapsed time: {:.2} seconds'.format(time.time() - self.start_time))
+        utils.print_info('Elapsed time: {0:.2f} seconds'.format(time.time() - self.start_time))
 
     def submit(self, *args):
         try:

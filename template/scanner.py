@@ -21,13 +21,12 @@ WFingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
 # exploit: available exploit list
 ExtraInfo = namedtuple('extra', ['segment', 'feature', 'index'])
 HFingerprint = namedtuple('h_fp', ['module', 'segment', 'match_type', 'fp', 'extra', 'exploit'])
-# http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'match-type', 'fp',
-#                                        [('TEXT', '', 1), ('Server', '', 1)], []])]
-JFeature = {
-    '': [],
-    # '': []
-}
+JFeature = namedtuple('j_feature', ['feature', 'appendix'])
 RouterInfo = namedtuple('router', ['host', 'port', 'brand', 'module', 'extra', 'exploit'])
+FingerprintConf = namedtuple('fingerprint_conf', ['brand', 'www_auth_fp', 'http_fp'])
+
+FINGERPRINT_DB = []
+JUMP_FEATURES = []
 
 
 class BaseScanner(object):

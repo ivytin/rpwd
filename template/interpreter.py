@@ -33,11 +33,14 @@ class Task(object):
 
         utils.print_info('Total {} hosts added'.format(total))
 
-    def timeout(self, timeout):
-        if utils.valid_timeout(timeout):
-            self.__timeout = int(timeout)
-        else:
-            raise BadHostInfoException('bad timeout number: {}'.format(timeout))
+    def timeout(self, timeouts):
+        for t in timeouts:
+            print(t)
+            if utils.valid_timeout(t):
+                self.__timeout = int(t)
+                return
+
+        raise BadHostInfoException('bad timeout number. (t should between 1 - 15)')
 
     def file(self, paths):
         # TODO read hosts info file
@@ -59,8 +62,12 @@ class Task(object):
                     raise BadHostInfoException('cannot creat output file: {}'.format(path))
 
     def threads(self, threads):
-        if utils.valid_threads(threads):
-            self.__threads = int(threads)
+        for t in threads:
+            if utils.valid_threads(threads):
+                self.__threads = int(threads)
+                return
+
+        raise BadHostInfoException('bad threads number. (t should between 1 - 50')
 
     def show(self):
         utils.print_help('"Target info: {')

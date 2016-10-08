@@ -4,12 +4,9 @@
 import re
 import requests
 import utils
-from collections import namedtuple
-from template.scanner import BaseScanner, RouterInfo, ExtraInfo
+from template.scanner import BaseScanner, RouterInfo, ExtraInfo, FingerprintConf, JFeature
 from template.interpreter import result_queue
 from modules.scanner import tplink, netgear, dlink
-
-FingerprintConf = namedtuple('fingerprint_conf', ['brand', 'www_auth_fp', 'http_fp'])
 
 FINGERPRINT_DB = [
     FingerprintConf('TP-LINK', tplink.BASIC_FP, tplink.HTTP_FP),
@@ -49,9 +46,10 @@ class Scanner(BaseScanner):
         else:
             for jp_list in JUMP_FEATURES:
                 for jp_feature in jp_list:
-                    if jp_feature in r1.text:
+                    jp_feature = JFeature._make(jp_feature)
+                    if jp_feature.feature in r1.text:
                         # match jump_fingerprint list
-                        appendix = jp_feature
+                        appendix = jp_feature.appendix
                         r1, err = Scanner.http_get(s, host, port, timeout * 2, appendix=appendix)
                         if err:
                             utils.print_warning(err)
@@ -60,7 +58,10 @@ class Scanner(BaseScanner):
             brand, module_name, extra, exploit = Scanner.http_auth_handler(r1)
             if brand:
                 result = RouterInfo(host=host, port=port, brand=brand, module=module_name, extra=extra, exploit=exploit)
-                utils.print_info("{}: {} {}, {}".format(host, brand, module_name, extra))
+                if extra:
+                    utils.print_info("{}: {} {}, {}".format(host, brand, module_name, extra))
+                else:
+                    utils.print_info("{}: {} {}".format(host, brand, module_name))
             else:
                 utils.print_info("{}: {}".format(host, 'Unknown'))
                 return
@@ -92,17 +93,19 @@ class Scanner(BaseScanner):
         for fp_conf in FINGERPRINT_DB:
             for r_fp in fp_conf.http_fp:
                 # http_fingerprint = namedtuple('h_fp', ['module', 'segment', 'match_type', 'fp', 'extra', 'exploit'])
-                if r_fp.segment == 'TEXT':
+                if r_fp.segment.upper() == 'TEXT':
                     if Scanner.grab_info(r.text, r_fp.match_type, r_fp.fp):
                         extra_info = Scanner.grab_extra(r, r_fp.extra)
                         return fp_conf.brand, r_fp.module, extra_info, []
                 else:
-                    if Scanner.grab_info(r.headers[r_fp.segment], r_fp.match_type, r_fp.fp):
-                        extra_info = Scanner.grab_extra(r, r_fp.extra)
-                        return fp_conf.brand, r_fp.module, extra_info, []
+                    if r_fp.segment in r.headers:
+                        if Scanner.grab_info(r.headers[r_fp.segment], r_fp.match_type, r_fp.fp):
+                            extra_info = Scanner.grab_extra(r, r_fp.extra)
+                            return fp_conf.brand, r_fp.module, extra_info, []
 
-            if fp_conf.brand.lower() in r.headers['Server'].lower():
-                return fp_conf.brand, 'perhaps', None, []
+            if 'Server' in r.headers:
+                if fp_conf.brand.lower() in r.headers['Server'].lower():
+                    return fp_conf.brand, 'perhaps', None, []
 
             if fp_conf.brand.lower() in r.text.lower():
                 return fp_conf.brand, 'perhaps', None, []
@@ -135,10 +138,13 @@ class Scanner(BaseScanner):
         if extra_features[0]:
             # firmware
             extra_info = ExtraInfo._make(extra_features[0])
-            if extra_info.segment == 'TEXT':
+            if extra_info.segment.upper() == 'TEXT':
                 info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
             else:
-                info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
+                if extra_info.segment in r.headers:
+                    info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
+                else:
+                    info = None
 
             if info:
                 extra.append('firmware: {}'.format(info))
@@ -146,10 +152,13 @@ class Scanner(BaseScanner):
         if extra_features[1]:
             # hardware
             extra_info = ExtraInfo._make(extra_features[1])
-            if extra_info.segment == 'TEXT':
+            if extra_info.segment.upper() == 'TEXT':
                 info = Scanner.grab_info(r.text, 2, extra_info.feature, extra_info.index)
             else:
-                info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
+                if extra_info.segment in r.headers:
+                    info = Scanner.grab_info(r.headers[extra_info.segment], 2, extra_info.feature, extra_info.index)
+                else:
+                    info = None
 
             if info:
                 extra.append('hardware: {}'.format(info))
