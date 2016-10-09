@@ -44,6 +44,7 @@ class BaseScanner(object):
             cs = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             cs.settimeout(timeout)
             status = cs.connect((host, port))
+            cs.close()
         except socket.error as msg:
             # print('Failed to connect host: {}. Error msg: {}'.format(host, msg))
             return False

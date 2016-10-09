@@ -14,7 +14,7 @@ FINGERPRINT_DB = [
     FingerprintConf('D-LINK', dlink.BASIC_FP, dlink.HTTP_FP),
 ]
 
-JUMP_FEATURES = [tplink.JUMP_LIST, netgear.JUMP_LIST]
+JUMP_FEATURES = [tplink.JUMP_LIST, netgear.JUMP_LIST, dlink.JUMP_LIST]
 
 
 class Scanner(BaseScanner):
