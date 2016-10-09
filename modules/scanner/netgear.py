@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
 
-from template.scanner import WFingerprint, HFingerprint
+from template.scanner import WFingerprint, HFingerprint, BaseScanner, FingerprintConf
 
 # www_fingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
 BASIC_FP = [
@@ -91,3 +91,11 @@ HTTP_FP = [
 
 JUMP_LIST = []
 
+
+class Scanner(BaseScanner):
+    prompt = 'NETGEAR Scanner'
+    FINGERPRINT_DB = [
+        FingerprintConf('NETGEAR', BASIC_FP, HTTP_FP),
+    ]
+
+    JUMP_FEATURES = [JUMP_LIST]

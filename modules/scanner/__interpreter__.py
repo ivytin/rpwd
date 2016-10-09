@@ -153,4 +153,4 @@ class Interpreter(BaseInterpreter):
             return False
 
     def target_func(self, target):
-        self.module.scan(target.host, target.port, self.task.get_timeout())
+        self.module().scan(target.host, target.port, self.task.get_timeout())

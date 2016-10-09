@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
 
-from template.scanner import WFingerprint, HFingerprint
+from template.scanner import WFingerprint, HFingerprint, BaseScanner, FingerprintConf
 
 # WFingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
 BASIC_FP = [
@@ -124,3 +124,12 @@ JUMP_LIST = [
     ("<meta http-equiv=Refresh content='0; url=index.php'>", '/index.php'),
     ('parent.location.href="login.php";', '/login.php'),
 ]
+
+
+class Scanner(BaseScanner):
+    prompt = 'D-LINK Scanner'
+    FINGERPRINT_DB = [
+        FingerprintConf('D-LINK', BASIC_FP, HTTP_FP),
+    ]
+
+    JUMP_FEATURES = [JUMP_LIST]
