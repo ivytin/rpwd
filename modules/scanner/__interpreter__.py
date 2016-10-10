@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
+from prettytable import PrettyTable
 
 import utils
 import threads
 from template.interpreter import BaseInterpreter, scan_result_queue
-from template.scanner import ScanTask
+from template.scanner import ScanTask, RouterInfo
 from exceptions import BadHostInfoException, ModuleImportException
 
 
 class Interpreter(BaseInterpreter):
     def __init__(self):
         super(Interpreter, self).__init__()
+        self.last_result = []
         self.prompt_module = 'Scanner'
         self.module = None
         self.modules = utils.index_modules(modules_directory='/'.join((utils.MODULES_DIR, 'scanner/')))
@@ -93,6 +95,7 @@ class Interpreter(BaseInterpreter):
 
     def do_run(self, arg):
         scan_result_queue.empty()
+        self.last_result = []
         utils.print_info('checking if module loaded')
         if not self.check_module_loaded():
             utils.print_failed('checking module failed\n'
@@ -111,28 +114,46 @@ class Interpreter(BaseInterpreter):
             for target in self.task.get_targets():
                 executor.submit(self.target_func, target)
 
-        # utils.print_info()
-
         utils.print_success('all tasks finished...')
+
+        while True:
+            try:
+                result = scan_result_queue.get(block=False)
+                self.last_result.append(result)
+            except Exception as e:
+                print(e)
+                break
 
         if self.task.get_output() != '':
             fd = open(self.task.get_output(), 'w')
-            while True:
-                try:
-                    result = scan_result_queue.get(block=False)
-                    utils.print_info(
-                        "{}:{},{},{},{}".format(result.host, result.port,
-                                                   result.brand, result.module,
-                                                   result.exploit),
-                        file=fd)
-                except Exception as e:
-                    print(e)
-                    break
-
+            for result in self.last_result:
+                utils.print_info(
+                    "{}:{},{},{},{},{}".format(result.host, result.port, result.brand, result.module, result.extra,
+                                               result.exploit), file=fd)
             fd.close()
 
     def do_back(self, *arg):
         return True
+
+    def do_result(self, *args):
+        x = PrettyTable()
+        x.field_names = ['host', 'port', 'brand', 'module', 'extra', 'exploit']
+        for result in self.last_result:
+            x.add_row(result)
+
+        utils.print_info(x)
+
+    def do_writeresult(self, *args):
+        if self.task.get_output():
+            fd = open(self.task.get_output(), 'w')
+            for result in self.last_result:
+                utils.print_info(
+                    "{}:{},{},{},{},{}".format(result.host, result.port, result.brand, result.module, result.extra,
+                                               result.exploit), file=fd)
+
+            fd.close()
+        else:
+            utils.print_failed('no output file given')
 
     def complete_show(self, text, *args):
         return self.auto_complete(text, 'show')

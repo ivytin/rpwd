@@ -8,6 +8,7 @@ import utils
 from utils import Color
 
 scan_result_queue = queue.Queue()
+exploit_result_queue = queue.Queue()
 
 
 class BaseInterpreter(cmd.Cmd):

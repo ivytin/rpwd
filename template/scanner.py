@@ -5,9 +5,7 @@ import re
 import socket
 import requests
 from collections import namedtuple
-
 from prettytable import PrettyTable
-
 import utils
 from exceptions import RequetsHostException, BadHostInfoException
 
@@ -84,14 +82,14 @@ class BaseScanner(object):
             utils.print_warning('{}:{} requests error, msg: PingError'.format(host, port))
             return
         s = requests.Session()
-        r1, err = self.http_get(s, host, port, timeout * 2)
+        resp, err = self.http_get(s, host, port, timeout * 2)
         if err:
             utils.print_warning(err)
             return
 
-        if 'WWW-Authenticate' in r1.headers:
+        if 'WWW-Authenticate' in resp.headers:
             # match www_auth_fingerprint list
-            brand, module_name, exploit = self.www_auth_handler(r1)
+            brand, module_name, exploit = self.www_auth_handler(resp)
             if brand:
                 result = RouterInfo(host=host, port=port, brand=brand, module=module_name, extra=None, exploit=exploit)
                 utils.print_info("{}: {} {}".format(host, brand, module_name))
@@ -104,15 +102,15 @@ class BaseScanner(object):
             for jp_list in self.JUMP_FEATURES:
                 for jp_feature in jp_list:
                     jp_feature = JFeature._make(jp_feature)
-                    if jp_feature.feature in r1.text:
+                    if jp_feature.feature in resp.text:
                         # match jump_fingerprint list
                         appendix = jp_feature.appendix
-                        r1, err = self.http_get(s, host, port, timeout * 2, appendix=appendix)
+                        resp, err = self.http_get(s, host, port, timeout * 2, appendix=appendix)
                         if err:
                             utils.print_warning(err)
                             return
             # match normal_fingerprint list
-            brand, module_name, extra, exploit = self.http_auth_handler(r1)
+            brand, module_name, extra, exploit = self.http_auth_handler(resp)
             if brand:
                 result = RouterInfo(host=host, port=port, brand=brand, module=module_name, extra=extra, exploit=exploit)
                 if extra:
@@ -255,7 +253,6 @@ class ScanTask(object):
         raise BadHostInfoException('bad timeout number. (t should between 1 - 15)')
 
     def file(self, paths):
-        # TODO read hosts info file
         for path in paths:
             if path != '':
                 if utils.valid_file_exist(path):
@@ -282,7 +279,7 @@ class ScanTask(object):
         raise BadHostInfoException('bad threads number. (t should between 1 - 50')
 
     def show(self):
-        utils.print_help('Target info')
+        utils.print_help('"Target info')
         i = 0
         x = PrettyTable()
         x.field_names = ['index', 'host', 'port']
