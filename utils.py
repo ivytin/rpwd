@@ -209,3 +209,7 @@ def valid_file_exist(path):
 def valid_file_creatable(path):
     dir_name = os.path.dirname(path) or os.getcwd()
     return os.access(dir_name, os.W_OK)
+
+
+def valid_exploit(name):
+    return True

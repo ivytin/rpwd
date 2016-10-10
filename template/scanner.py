@@ -6,13 +6,15 @@ import socket
 import requests
 from collections import namedtuple
 
+from prettytable import PrettyTable
+
 import utils
-from exceptions import RequetsHostException
+from exceptions import RequetsHostException, BadHostInfoException
 
 # module: TL-WR720N
 # match_type: 0/1/2, 0 -> equal; 1 -> has; 2 -> regEx(retain)
 # exploit: available exploit list
-from template.interpreter import result_queue
+from template.interpreter import scan_result_queue
 
 WFingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
 # www_auth_fingerprint = namedtuple('r_fp', ['module', 'match_type', 'fp', 'exploit'])
@@ -22,6 +24,7 @@ WFingerprint = namedtuple('w_fp', ['module', 'match_type', 'fp', 'exploit'])
 # fp: <a href="http://support.dlink.com" target="_blank">DIR-629</a>
 # extra: [('<span class="version">.+?: (.+?)</span>', 1), ('style="text-transform:uppercase;">(.+?)</span>', 1)]
 # exploit: available exploit list
+ScanTarget = namedtuple('s_target', ['host', 'port'])
 ExtraInfo = namedtuple('extra', ['segment', 'feature', 'index'])
 HFingerprint = namedtuple('h_fp', ['module', 'segment', 'match_type', 'fp', 'extra', 'exploit'])
 JFeature = namedtuple('j_feature', ['feature', 'appendix'])
@@ -39,7 +42,7 @@ class BaseScanner(object):
     JUMP_FEATURES = []
 
     def __init__(self):
-        result_queue.empty()
+        scan_result_queue.empty()
 
     def ping(self, host, port, timeout):
         try:
@@ -120,7 +123,7 @@ class BaseScanner(object):
                 utils.print_info("{}: {}".format(host, 'Unknown'))
                 return
 
-        result_queue.put(result)
+        scan_result_queue.put(result)
 
     def www_auth_handler(self, r):
         for fp_conf in self.FINGERPRINT_DB:
@@ -217,3 +220,109 @@ class BaseScanner(object):
             return ' '.join(extra)
         else:
             return None
+
+
+class ScanTask(object):
+    def __init__(self):
+        self.__targets = set()
+        self.__timeout = 3
+        self.__threads = 8
+        self.__output = ''
+
+    def emptyhosts(self, *args):
+        self.__targets = set()
+
+    def add(self, host_infos):
+        total = 0
+        for host_info in host_infos:
+            try:
+                host, port = host_info.split(':')[0].strip(), host_info.split(':')[1].strip()
+                if utils.valid_host(host) and utils.valid_port(port):
+                    self.__targets.add(ScanTarget(host=host, port=int(port)))
+                    total += 1
+            except IndexError:
+                pass
+
+        utils.print_info('Total {} hosts added'.format(total))
+
+    def timeout(self, timeouts):
+        for t in timeouts:
+            print(t)
+            if utils.valid_timeout(t):
+                self.__timeout = int(t)
+                return
+
+        raise BadHostInfoException('bad timeout number. (t should between 1 - 15)')
+
+    def file(self, paths):
+        # TODO read hosts info file
+        for path in paths:
+            if path != '':
+                if utils.valid_file_exist(path):
+                    self.read_host_file(path)
+                    break
+                else:
+                    raise BadHostInfoException('no such file: {}'.format(path))
+
+    def output(self, paths):
+        for path in paths:
+            if path != '':
+                if utils.valid_file_creatable(path):
+                    self.__output = path
+                    break
+                else:
+                    raise BadHostInfoException('cannot creat output file: {}'.format(path))
+
+    def threads(self, threads):
+        for t in threads:
+            if utils.valid_threads(threads):
+                self.__threads = int(threads)
+                return
+
+        raise BadHostInfoException('bad threads number. (t should between 1 - 50')
+
+    def show(self):
+        utils.print_help('Target info')
+        i = 0
+        x = PrettyTable()
+        x.field_names = ['index', 'host', 'port']
+        for target in self.__targets:
+            x.add_row([i, target.host, target.port])
+            i += 1
+        utils.print_info(x)
+        utils.print_help('Threads: ', end='')
+        utils.print_info(str(self.__threads))
+        utils.print_help('Timeout: ', end='')
+        utils.print_info(str(self.__timeout))
+        utils.print_help('Output: ', end='')
+        utils.print_info(self.__output)
+        # utils.print_info("Target info: {}\n"
+        #                  "Threads: {}\n"
+        #                  "Timeout: {}\n"
+        #                  "Output: {}"
+        #                  .format(self.__targets, self.__threads, self.__timeout, self.__output))
+
+    def get_targets(self):
+        return self.__targets
+
+    def get_threads(self):
+        return self.__threads
+
+    def get_timeout(self):
+        return self.__timeout
+
+    def get_output(self):
+        return self.__output
+
+    def read_host_file(self, path):
+        fd = open(path, 'r')
+        total = 0
+        for line in map(lambda x: x.strip(), fd.readlines()):
+            host, ports = line.split(',')[0].strip(), map(lambda x: x.strip(), line.split(',')[1:])
+            if utils.valid_host(host):
+                for port in ports:
+                    if utils.valid_port(port):
+                        self.__targets.add(ScanTarget(host=host, port=int(port)))
+                        total += 1
+
+        utils.print_info('Total {} hosts added'.format(total))

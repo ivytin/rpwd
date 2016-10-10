@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: 'arvin'
+
 import utils
 import threads
-from template.interpreter import BaseInterpreter, Task
-from template.interpreter import result_queue
+from template.interpreter import BaseInterpreter, scan_result_queue
+from template.scanner import ScanTask
 from exceptions import BadHostInfoException, ModuleImportException
 
 
@@ -15,13 +16,11 @@ class Interpreter(BaseInterpreter):
         self.module = None
         self.modules = utils.index_modules(modules_directory='/'.join((utils.MODULES_DIR, 'scanner/')))
         self.files = utils.list_files('./')
-        self.sub_opt = {'set': ['add', 'timeout', 'threads', 'file', 'output'],
-                        'show': ['host', 'port', 'output', 'all'], }
-        self.task = Task()
+        self.sub_opt = {'task': ['add', 'timeout', 'threads', 'file', 'output', 'emptyhosts'],
+                        # 'show': ['host', 'port', 'output', 'all'],
+                        }
+        self.task = ScanTask()
         self.cmdloop()
-
-    def init_exploit(self):
-        pass
 
     def change_prompt(self, scanner):
         self.prompt_module = scanner.prompt
@@ -37,10 +36,10 @@ class Interpreter(BaseInterpreter):
         else:
             self.change_prompt(self.module)
 
-    def do_unload(self, args):
-        self.module = None
-        self.prompt_module = 'Scanner'
-        self.generate_prompt()
+    # def do_unload(self, args):
+    #     self.module = None
+    #     self.prompt_module = 'Scanner'
+    #     self.generate_prompt()
 
     def complete_load(self, text, line, *args, **kwargs):
         available_modules = [s for s in self.modules if s.startswith(text)]
@@ -62,7 +61,7 @@ class Interpreter(BaseInterpreter):
     def do_task(self, args):
         try:
             sub_opt, arg = args.split(' ')[0], args.split(' ')[1:]
-            if sub_opt not in self.sub_opt['set']:
+            if sub_opt not in self.sub_opt['task']:
                 raise BadHostInfoException()
         except IndexError:
             utils.print_failed("Error during setting '{}'\n"
@@ -84,7 +83,7 @@ class Interpreter(BaseInterpreter):
         if len(line.split(' ')) > 2:
             return [' '.join((attr, '')) for attr in self.files if attr.startswith(text)]
         else:
-            return self.auto_complete(text, 'set')
+            return self.auto_complete(text, 'task')
 
     def do_show(self, arg):
         self.task.show()
@@ -93,7 +92,7 @@ class Interpreter(BaseInterpreter):
         pass
 
     def do_run(self, arg):
-        result_queue.empty()
+        scan_result_queue.empty()
         utils.print_info('checking if module loaded')
         if not self.check_module_loaded():
             utils.print_failed('checking module failed\n'
@@ -120,8 +119,12 @@ class Interpreter(BaseInterpreter):
             fd = open(self.task.get_output(), 'w')
             while True:
                 try:
-                    result = result_queue.get(block=False)
-                    utils.print_info("{}: {} {}".format(result.host, result.port, result.module), file=fd)
+                    result = scan_result_queue.get(block=False)
+                    utils.print_info(
+                        "{}:{},{},{},{}".format(result.host, result.port,
+                                                   result.brand, result.module,
+                                                   result.exploit),
+                        file=fd)
                 except Exception as e:
                     print(e)
                     break
