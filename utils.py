@@ -3,7 +3,10 @@
 # @Author: 'arvin'
 import importlib
 import os
+import random
+import re
 import socket
+import string
 import sys
 import modules as rtp_modules
 from exceptions import ModuleImportException
@@ -213,3 +216,21 @@ def valid_file_creatable(path):
 
 def valid_exploit(name):
     return True
+
+
+def random_text(length, alph=string.ascii_letters + string.digits):
+    """ Random text generator. NOT crypto safe.
+    Generates random text with specified length and alphabet.
+    """
+    return ''.join(random.choice(alph) for _ in range(length))
+
+
+host_re = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+')
+
+
+def host_in_url(url):
+    match = host_re.search(url)
+    if match:
+        return match.group()
+    else:
+        return ''

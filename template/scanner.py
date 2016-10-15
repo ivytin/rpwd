@@ -149,12 +149,12 @@ class BaseScanner(object):
                 if r_fp.segment.upper() == 'TEXT':
                     if self.grab_info(r.text, r_fp.match_type, r_fp.fp):
                         extra_info = self.grab_extra(r, r_fp.extra)
-                        return fp_conf.brand, r_fp.module, extra_info, []
+                        return fp_conf.brand, r_fp.module, extra_info, r_fp.exploit
                 else:
                     if r_fp.segment in r.headers:
                         if self.grab_info(r.headers[r_fp.segment], r_fp.match_type, r_fp.fp):
                             extra_info = self.grab_extra(r, r_fp.extra)
-                            return fp_conf.brand, r_fp.module, extra_info, []
+                            return fp_conf.brand, r_fp.module, extra_info, r_fp.exploit
 
             if 'Server' in r.headers:
                 if fp_conf.brand.lower() in r.headers['Server'].lower():

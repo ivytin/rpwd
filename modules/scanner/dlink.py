@@ -44,6 +44,7 @@ BASIC_FP = [
     WFingerprint('DIR-615"', 0, 'Basic realm="DIR-615"', []),
     WFingerprint('DIR-825', 0, 'Basic realm="DIR-825"', []),
     WFingerprint('DSL-2600U', 0, 'Basic realm="DSL-2600U"', []),
+    WFingerprint('DSL-2640RL', 0, 'Basic realm="DSL-2640R"', ['zynos.rom-0']),
     WFingerprint('DSL-2740R', 0, 'Basic realm="DSL-2740R"', []),
     WFingerprint('DSL-320B', 0, 'Basic realm="DSL-320B"', []),
     WFingerprint('DSL-321B', 0, 'Basic realm="DSL-321B"', []),

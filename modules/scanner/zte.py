@@ -5,15 +5,15 @@
 from template.scanner import WFingerprint, HFingerprint, BaseScanner, FingerprintConf
 
 BASIC_FP = [
-    WFingerprint('ZXV10 W300', 0, 'Basic realm="ZXV10 W300"', [])
+    WFingerprint('ZXV10 W300', 0, 'Basic realm="ZXV10 W300"', ['zynos.rom-0'])
 ]
 
 HTTP_FP = [
     HFingerprint('F412', 'TEXT', 1, '<title>F412</title>', [None, None], []),
-    HFingerprint('F460', 'TEXT', 1, '<title>F460</title>', [None, None], []),
+    HFingerprint('F460', 'TEXT', 1, '<title>F460</title>', [None, None], ['zte.f460_f660_rce']),
     HFingerprint('F620', 'TEXT', 1, '<title>F620</title>', [None, None], []),
     HFingerprint('F620G', 'TEXT', 1, '<title>F620G</title>', [None, None], []),
-    HFingerprint('F660', 'TEXT', 1, '<title>F660</title>', [None, None], []),
+    HFingerprint('F660', 'TEXT', 1, '<title>F660</title>', [None, None], ['zte.f460_f660_rce']),
     HFingerprint('MT-PON-AT-4', 'TEXT', 1, '<title>MT-PON-AT-4</title>', [None, None], []),
     HFingerprint('ZXDSL 931WII', 'TEXT', 1, '<title>ZXDSL 931WII</title>', [None, None], []),
     HFingerprint('ZXHN E5501', 'TEXT', 1, '<title>ZXHN E5501</title>', [None, None], []),
