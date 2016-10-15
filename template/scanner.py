@@ -228,7 +228,11 @@ class ScanTask(object):
         self.__output = ''
 
     def emptyhosts(self, *args):
-        self.__targets = set()
+        utils.print_warning('are you sure to clear all hosts? ')
+        user_input = input('Y/N:')
+        if user_input.lower() == 'y' or user_input.lower() == 'yes':
+            self.__targets = set()
+            utils.print_info('clear all last results')
 
     def add(self, host_infos):
         total = 0

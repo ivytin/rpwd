@@ -6,7 +6,7 @@ from prettytable import PrettyTable
 import utils
 import threads
 from template.interpreter import BaseInterpreter, scan_result_queue
-from template.scanner import ScanTask, RouterInfo
+from template.scanner import ScanTask
 from exceptions import BadHostInfoException, ModuleImportException
 
 
@@ -142,6 +142,13 @@ class Interpreter(BaseInterpreter):
             x.add_row(result)
 
         utils.print_info(x)
+
+    def do_emptyresult(self, *args):
+        utils.print_warning('are you sure to clear all result? ')
+        user_input = input('Y/N:')
+        if user_input.lower() == 'y' or user_input.lower() == 'yes':
+            self.last_result = []
+            utils.print_info('clear all last results')
 
     def do_writeresult(self, *args):
         if self.task.get_output():

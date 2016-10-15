@@ -39,8 +39,6 @@ class BaseInterpreter(cmd.Cmd):
 
     def default(self, line):
         utils.print_failed('*** Unknown command: {command}'.format(command=line))
-        # must wait util printer thread finishs print_failed() call,
-        # or the output sequence will be disorganized
 
     def do_help(self, args):
         if not args:

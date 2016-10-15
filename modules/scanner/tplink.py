@@ -8,6 +8,7 @@ from template.scanner import WFingerprint, HFingerprint, BaseScanner, Fingerprin
 BASIC_FP = [
     WFingerprint('R860', 0, 'Basic realm="TP-LINK Router R860"', []),
     WFingerprint('WR720N', 0, 'Basic realm="150Mbps Wireless N Router TL-WR720N"', []),
+    WFingerprint('TD-8816', 0, 'Basic realm="TD-8816"', ['zynos.rom-0']),
     WFingerprint('TD-8840T 2.0', 0, 'Basic realm="TD-8840T 2.0"', []),
     WFingerprint('TD-8840T', 0, 'Basic realm="TD-8840T"', []),
     WFingerprint('TL-WR841HP', 0, 'Basic realm="TP-LINK 300Mbps High Power Wireless N Router TL-WR841HP"', []),
