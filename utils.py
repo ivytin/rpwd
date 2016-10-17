@@ -8,6 +8,9 @@ import re
 import socket
 import string
 import sys
+
+import time
+
 import modules as rtp_modules
 from exceptions import ModuleImportException
 
@@ -235,3 +238,21 @@ def host_in_url(url):
         return match.group()
     else:
         return ''
+
+
+def m_log():
+    exploit_log_name = './log/{}.txt'.format(time.strftime('%Y%m%d%H%M%S', time.localtime()))
+    exploit_log_file = None
+    while True:
+        info = yield None
+        if exploit_log_file is None:
+            try:
+                exploit_log_file = open(exploit_log_name, 'w')
+                print_info('Host: {},{}:\n{}'.format(info[0], info[1], info[2]), file=exploit_log_file, flush=True)
+            except Exception as e:
+                print_warning('Can not create log file, msg: {}'.format(e))
+        else:
+            print_info('Host: {},{}:\n{}'.format(info[0], info[1], info[2]), file=exploit_log_file, flush=True)
+
+logger = m_log()
+logger.__next__()
