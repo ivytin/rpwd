@@ -127,13 +127,14 @@ def __print(*args, **kwargs):
     file = kwargs.get('file', sys.stdout)
     sep = kwargs.get('sep', ' ')
     end = kwargs.get('end', '\n')
+    flush = kwargs.get('flush', False)
     if color:
         msg = color + sep.join("%s" % arg for arg in args) + Color.ENDC
-        print(msg, sep=sep, end=end, file=file)
+        print(msg, sep=sep, end=end, file=file, flush=flush)
         # printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
     else:
         msg = sep.join("%s" % arg for arg in args)
-        print(msg, sep=sep, end=end, file=file)
+        print(msg, sep=sep, end=end, file=file, flush=flush)
         # printer_queue.put(PrintResource(content=msg, sep=sep, end=end, file=file))
 
 
