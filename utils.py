@@ -255,4 +255,4 @@ def m_log():
             print_info('Host: {},{}:\n{}'.format(info[0], info[1], info[2]), file=exploit_log_file, flush=True)
 
 logger = m_log()
-logger.__next__()
+next(logger)
